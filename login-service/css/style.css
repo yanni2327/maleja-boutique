@@ -1,0 +1,267 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Courier New', Courier, monospace;
+    background: url("recursos/Fondo.png") no-repeat center center fixed;
+    background-size: cover;
+    height: 100vh;
+    background-position: left center;
+}
+
+.formulario {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 40px;
+    border-radius: 10px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.form-panel {
+    width: 100%;
+}
+
+.formulario h1 {
+    text-align: center;
+    margin: 0 0 18px 0;
+    padding-bottom: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 1.9rem;
+    letter-spacing: 0.6px;
+    color: var(--accent);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+    position: relative;
+}
+
+.formulario h1::after {
+    content: '';
+    display: block;
+    width: 64px;
+    height: 4px;
+    background: var(--accent);
+    margin: 10px auto 0;
+    border-radius: 3px;
+    opacity: 0.95;
+}
+
+.formulario form {
+    padding: 0 40px;
+    box-sizing: border-box;
+}
+
+form .username {
+    position: relative;
+    border-bottom: 2px solid #adadad;
+    margin: 30px 0;
+}
+
+.username input {
+    width: 100%;
+    padding: 0 5px;
+    height: 40px;
+    font-size: 16px;
+    border: none;
+    background: none;
+    outline: none;
+}
+
+.username label {
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    color: #adadad;
+    transform: translateY(-50%);
+    font-size: 16px;
+    pointer-events: none;
+    transition: 0.5s;
+}
+
+.username span::before {
+    content: '';
+    position: absolute;
+    top: 40px;
+    left: 0;
+    width: 0%;
+    height: 2px;
+    background: var(--accent);
+    transition: 0.5s;
+}
+
+.username input:focus~label,
+.username input:valid~label {
+    top: -5px;
+    color: var(--accent);
+    font-weight: 800;
+}
+
+.username input:focus~span::before,
+.username input:valid~span::before {
+    width: 100%;
+}
+
+.recordar {
+    margin: -5px 0 20px 5px;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.recordar:hover {
+    text-decoration: underline;
+}
+
+.recordar a {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.recordar a:hover {
+    text-decoration: underline;
+}
+
+input[type="submit"] {
+    width: 100%;
+    height: 50px;
+    border: none;
+    background-color: var(--accent);
+    border-radius: 25px;
+    font-size: 18px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+input[type="submit"]:hover {
+    background-color: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    transition: 0.5s;
+    font-weight: 800;
+}
+
+.registarse {
+    margin: 30px 0 0;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 16px;
+    text-align: center;
+}
+
+.registarse a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.registarse a:hover {
+    text-decoration: underline;
+}
+
+
+/*para definir los colores*/
+
+:root {
+    --accent: #c04a78;
+    --accent-opaque: rgba(192, 74, 120, 0.95);
+    --accent-soft: rgba(192, 74, 120, 0.6);
+}
+
+
+/* Estilos para páginas de restablecimiento */
+
+.container {
+    width: 360px;
+    margin: 0 auto;
+    padding: 24px 32px;
+    box-sizing: border-box;
+}
+
+.container h2 {
+    text-align: center;
+    margin-bottom: 18px;
+    font-family: 'Poppins', sans-serif;
+    color: var(--accent);
+}
+
+.container form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.container label {
+    font-size: 14px;
+    color: #444;
+}
+
+.container input[type="email"],
+.container input[type="password"] {
+    height: 40px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+    font-size: 15px;
+}
+
+.container input[type="email"]:focus,
+.container input[type="password"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.container button,
+.container input[type="submit"] {
+    height: 44px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.container button:hover,
+.container input[type="submit"]:hover {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    transition: 0.25s;
+}
+
+.forgot {
+    text-align: right;
+    margin-top: -8px;
+    margin-bottom: 16px;
+}
+
+.forgot a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.forgot a:hover {
+    text-decoration: underline;
+}
+
+
+/* Ajustes para móviles */
+
+@media (max-width: 480px) {
+    .formulario {
+        padding: 20px;
+        width: 92%;
+    }
+    .container {
+        width: 100%;
+        padding: 16px;
+    }
+}

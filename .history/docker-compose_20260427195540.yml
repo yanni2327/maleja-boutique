@@ -1,0 +1,252 @@
+services:
+
+  # ══════════════════════════════════════════════════
+  # 🔍 DESCUBRIDOR DE SERVICIOS — Consul
+  # ══════════════════════════════════════════════════
+  consul:
+    image: hashicorp/consul:1.18
+    container_name: maleja_consul
+    restart: unless-stopped
+    ports:
+      - "8500:8500"
+    command: "agent -dev -ui -client=0.0.0.0"
+    networks:
+      - maleja_network
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ══════════════════════════════════════════════════
+  # 🗄️  BASES DE DATOS — MongoDB
+  # ══════════════════════════════════════════════════
+  mongo-main:
+    image: mongo:7.0
+    container_name: maleja_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_main_data:/data/db
+    networks:
+      - maleja_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-orders:
+    image: mongo:7.0
+    container_name: maleja_mongo_orders
+    restart: unless-stopped
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongo_orders_data:/data/db
+    networks:
+      - maleja_network
+
+  mongo-payments:
+    image: mongo:7.0
+    container_name: maleja_mongo_payments
+    restart: unless-stopped
+    ports:
+      - "27020:27017"
+    volumes:
+      - mongo_payments_data:/data/db
+    networks:
+      - maleja_network
+
+  # ══════════════════════════════════════════════════
+  # 🖥️  PANEL VISUAL — Mongo Express
+  # ══════════════════════════════════════════════════
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: maleja_mongo_express
+    restart: unless-stopped
+    depends_on:
+      mongo-main:
+        condition: service_healthy
+    environment:
+      ME_CONFIG_MONGODB_URL:        mongodb://mongo-main:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    ports:
+      - "8081:8081"
+    networks:
+      - maleja_network
+
+  # ══════════════════════════════════════════════════
+  # 🗄️  BASE DE DATOS USUARIOS — MySQL
+  # ══════════════════════════════════════════════════
+  mysql:
+    image: mysql:8.0
+    container_name: maleja_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: NuevaClave123!
+      MYSQL_DATABASE:      login_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./login-service/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - maleja_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pNuevaClave123!"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ══════════════════════════════════════════════════
+  # 👤 LOGIN SERVICE — PHP
+  # ══════════════════════════════════════════════════
+  login-service:
+    build:
+      context: ./login-service
+      dockerfile: Dockerfile.login
+    container_name: maleja_login_service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      MYSQL_HOST:     mysql
+      MYSQL_USER:     root
+      MYSQL_PASSWORD: NuevaClave123!
+      MYSQL_DATABASE: login_db
+    ports:
+      - "8090:80"
+    networks:
+      - maleja_network
+
+  # ══════════════════════════════════════════════════
+  # 👗 MICROSERVICIO — Products Service
+  # ══════════════════════════════════════════════════
+  products-service:
+    build:
+      context: ./rose-boutique-bliss/src/products-service
+      dockerfile: Dockerfile
+    container_name: maleja_products_service
+    restart: unless-stopped
+    depends_on:
+      mongo-main:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    environment:
+      PORT:                  3002
+      MONGO_URI:             mongodb://mongo-main:27017/maleja_db
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY:    ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      CONSUL_HOST:           consul
+      CONSUL_PORT:           8500
+    ports:
+      - "3002:3002"
+    networks:
+      - maleja_network
+
+  # ══════════════════════════════════════════════════
+  # 🛒 MICROSERVICIO — Orders Service
+  # ══════════════════════════════════════════════════
+  orders-service:
+    build:
+      context: ./orders-service/orders-service
+      dockerfile: Dockerfile
+    container_name: maleja_orders_service
+    restart: unless-stopped
+    depends_on:
+      mongo-orders:
+        condition: service_started
+      consul:
+        condition: service_healthy
+    environment:
+      PORT:                 3003
+      MONGO_URI:            mongodb://mongo-orders:27017/maleja_orders_db
+      JWT_SECRET:           maleja_jwt_secret_2024_super_seguro
+      PRODUCTS_SERVICE_URL: http://products-service:3002
+      CONSUL_HOST:          consul
+      CONSUL_PORT:          8500
+    ports:
+      - "3003:3003"
+    networks:
+      - maleja_network
+
+  # ══════════════════════════════════════════════════
+  # 💳 MICROSERVICIO — Payments Service (Wompi)
+  # ══════════════════════════════════════════════════
+  payments-service:
+    build:
+      context: ./payments-service
+      dockerfile: Dockerfile
+    container_name: maleja_payments_service
+    restart: unless-stopped
+    depends_on:
+      mongo-payments:
+        condition: service_started
+      consul:
+        condition: service_healthy
+    environment:
+      PORT:                3004
+      MONGO_URI:           mongodb://mongo-payments:27017/maleja_payments_db
+      JWT_SECRET:          maleja_jwt_secret_2024_super_seguro
+      WOMPI_PUBLIC_KEY:    ${WOMPI_PUBLIC_KEY}
+      WOMPI_PRIVATE_KEY:   ${WOMPI_PRIVATE_KEY}
+      WOMPI_EVENTS_SECRET: ${WOMPI_EVENTS_SECRET}
+      WOMPI_ENV:           sandbox
+      ORDERS_SERVICE_URL:  http://orders-service:3003
+      FRONTEND_URL:        http://localhost:8080
+      CONSUL_HOST:         consul
+      CONSUL_PORT:         8500
+    ports:
+      - "3004:3004"
+    networks:
+      - maleja_network
+
+  # ══════════════════════════════════════════════════
+  # 🔀 API GATEWAY — Nginx
+  # ══════════════════════════════════════════════════
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: maleja_api_gateway
+    restart: unless-stopped
+    depends_on:
+      - products-service
+      - orders-service
+      - payments-service
+    ports:
+      - "3000:80"
+    networks:
+      - maleja_network
+
+  # ══════════════════════════════════════════════════
+  # 🌸 FRONTEND — React (Maleja Boutique)
+  # ══════════════════════════════════════════════════
+  frontend:
+    build:
+      context: ./rose-boutique-bliss
+      dockerfile: Dockerfile.frontend
+    container_name: maleja_frontend
+    restart: unless-stopped
+    depends_on:
+      - api-gateway
+    ports:
+      - "8080:80"
+    networks:
+      - maleja_network
+
+volumes:
+  mongo_main_data:
+  mongo_orders_data:
+  mongo_payments_data:
+  mysql_data:
+
+networks:
+  maleja_network:
+    driver: bridge
