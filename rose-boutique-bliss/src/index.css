@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 340 30% 97%;
+    --foreground: 340 25% 15%;
+
+    --card: 340 25% 98%;
+    --card-foreground: 340 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 340 25% 15%;
+
+    --primary: 340 60% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 340 30% 92%;
+    --secondary-foreground: 340 25% 20%;
+
+    --muted: 340 20% 94%;
+    --muted-foreground: 340 10% 45%;
+
+    --accent: 340 45% 88%;
+    --accent-foreground: 340 25% 18%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 340 25% 90%;
+    --input: 340 25% 90%;
+    --ring: 340 60% 55%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 340 25% 96%;
+    --sidebar-foreground: 340 15% 30%;
+    --sidebar-primary: 340 60% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 340 30% 92%;
+    --sidebar-accent-foreground: 340 25% 18%;
+    --sidebar-border: 340 20% 90%;
+    --sidebar-ring: 340 60% 55%;
+
+    --gold: 38 70% 55%;
+    --gold-foreground: 38 70% 20%;
+    --rose-light: 340 40% 95%;
+    --rose-glow: 340 80% 70%;
+  }
+
+  .dark {
+    --background: 340 20% 8%;
+    --foreground: 340 15% 92%;
+
+    --card: 340 20% 10%;
+    --card-foreground: 340 15% 92%;
+
+    --popover: 340 20% 10%;
+    --popover-foreground: 340 15% 92%;
+
+    --primary: 340 60% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 340 20% 18%;
+    --secondary-foreground: 340 15% 92%;
+
+    --muted: 340 15% 18%;
+    --muted-foreground: 340 10% 60%;
+
+    --accent: 340 25% 20%;
+    --accent-foreground: 340 15% 92%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 340 15% 20%;
+    --input: 340 15% 20%;
+    --ring: 340 60% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Lato', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+  }
+}
