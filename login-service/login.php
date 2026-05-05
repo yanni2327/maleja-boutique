@@ -18,7 +18,7 @@ if ($resultado->num_rows > 0) {
         'usuario' => $user['usuario'],
         'role'    => $role
     ]));
-    header("Location: http://localhost:8080/auth-callback?token=" . $token . "&user=" . $userData);
+    header("Location: https://humorous-acceptance-production.up.railway.app/auth-callback?token=" . $token . "&user=" . $userData);
     exit();
 } else {
     echo "<script>
