@@ -1,17 +1,13 @@
-FROM php:8.2-apache
+FROM php:8.2-cli
 
 # Instalar mysqli
 RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
 
-# Configurar Apache MPM
-RUN a2dismod mpm_event mpm_worker 2>/dev/null; a2enmod mpm_prefork
+# Copiar archivos
+COPY . /app/
 
-# Copiar archivos del proyecto
-COPY . /var/www/html/
-
-# Dar permisos
-RUN chown -R www-data:www-data /var/www/html
+WORKDIR /app
 
 EXPOSE 80
 
-CMD ["apache2-foreground"]
+CMD ["php", "-S", "0.0.0.0:80"]
