@@ -6,7 +6,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 
-const LOGIN_URL = "http://localhost:8090";
+const LOGIN_URL = "https://shimmering-creation-production-008b.up.railway.app";
 
 const navLinks = [
   { to: "/",      label: "Inicio"  },
