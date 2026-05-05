@@ -1,11 +1,11 @@
 <?php
-// Conexión a MySQL — compatible con Docker y local
 $host     = getenv('MYSQL_HOST')     ?: 'localhost';
+$port     = getenv('MYSQL_PORT')     ?: '3306';
 $user     = getenv('MYSQL_USER')     ?: 'root';
-$password = getenv('MYSQL_PASSWORD') ?: 'NuevaClave123!';
-$database = getenv('MYSQL_DATABASE') ?: 'login_db';
+$password = getenv('MYSQL_PASSWORD') ?: '';
+$database = getenv('MYSQL_DATABASE') ?: 'railway';
 
-$conexion = new mysqli($host, $user, $password, $database);
+$conexion = new mysqli($host, $user, $password, $database, (int)$port);
 
 if ($conexion->connect_error) {
     die("Error de conexión: " . $conexion->connect_error);
