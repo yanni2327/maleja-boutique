@@ -20,7 +20,7 @@ const createPayment = async (req, res) => {
 
     // Generar firma de integridad requerida por Wompi
     // Formato: referenceCode + amountInCents + currency + integritySecret
-    const integrityString = `${referenceCode}${amountInCents}COP${process.env.WOMPI_PRIVATE_KEY}`;
+    const integrityString = `${referenceCode}${amountInCents}COP${process.env.WOMPI_INTEGRITY_SECRET}`;
     const integritySignature = crypto
       .createHash('sha256')
       .update(integrityString)
