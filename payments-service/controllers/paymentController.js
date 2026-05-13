@@ -13,7 +13,7 @@ const createPayment = async (req, res) => {
       return res.status(400).json({ message: 'orderId, total y customerEmail son requeridos' });
 
     // Wompi maneja centavos — multiplicar por 100
-    const amountInCents = total * 100;
+    const amountInCents = Math.round(total) * 100;
 
     // Referencia unica para este pago
     const referenceCode = `MALEJA-${orderId}-${Date.now()}`;
