@@ -2,17 +2,42 @@ import { useState }   from "react";
 import { Link }        from "react-router-dom";
 import { Button }      from "@/components/ui/button";
 import { Separator }   from "@/components/ui/separator";
-import { Minus, Plus, Trash2, ShoppingBag, CreditCard, Loader2 } from "lucide-react";
+import { Input }       from "@/components/ui/input";
+import { Label }       from "@/components/ui/label";
+import { Minus, Plus, Trash2, ShoppingBag, CreditCard, Loader2, MapPin } from "lucide-react";
 import { useCart }     from "@/context/CartContext";
+import { createOrder } from "@/services/cartService";
 import { createPayment } from "@/services/paymentService";
 import { toast }       from "sonner";
 
+interface ShippingForm {
+  name:       string;
+  street:     string;
+  city:       string;
+  department: string;
+  phone:      string;
+}
+
 const Cart = () => {
   const { items, totalPrice, loading, updateItem, emptyCart } = useCart();
-  const [paying, setPaying] = useState(false);
+  const [paying,   setPaying]   = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<ShippingForm>(() => {
+    const user = JSON.parse(localStorage.getItem('maleja_user') || '{}');
+    return {
+      name:       user.name  || '',
+      street:     '',
+      city:       '',
+      department: '',
+      phone:      user.phone || '',
+    };
+  });
 
   const shipping = totalPrice > 200000 ? 0 : totalPrice > 0 ? 15000 : 0;
   const total    = totalPrice + shipping;
+
+  const handleField = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleProceedToPayment = async () => {
     const token = localStorage.getItem('maleja_token');
@@ -23,20 +48,44 @@ const Cart = () => {
       });
       return;
     }
+
+    // Validar formulario de envío
+    if (!form.name || !form.street || !form.city || !form.department || !form.phone) {
+      toast.error("Completa todos los datos de envío");
+      return;
+    }
+
     const user = JSON.parse(localStorage.getItem('maleja_user') || '{}');
     setPaying(true);
+
     try {
-      const orderId = `order-${Date.now()}`;
+      // ── PASO 1: Crear la orden real en el orders-service ──
+      const order = await createOrder({
+        shippingAddress: {
+          name:       form.name,
+          street:     form.street,
+          city:       form.city,
+          department: form.department,
+          phone:      form.phone,
+        },
+        shippingCost: shipping,
+      });
+
+      // ── PASO 2: Crear el pago con el ID real de la orden ──
       const payment = await createPayment({
-        orderId,
+        orderId:       order._id,
         total,
         customerEmail: user.email || 'cliente@maleja.com',
-        customerName:  user.name  || 'Cliente',
-        customerPhone: user.phone || ''
+        customerName:  form.name,
+        customerPhone: form.phone,
       });
+
       window.location.href = payment.redirectUrl;
-    } catch {
-      toast.error("Error iniciando el pago. Intenta de nuevo.");
+
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })
+        ?.response?.data?.message;
+      toast.error(msg || "Error iniciando el pago. Intenta de nuevo.");
     } finally {
       setPaying(false);
     }
@@ -65,7 +114,9 @@ const Cart = () => {
           <ShoppingBag className="mr-3 inline h-8 w-8 text-primary" />
           Tu Carrito
         </h1>
+
         <div className="mt-8 grid gap-8 lg:grid-cols-3">
+          {/* ── Lista de productos ── */}
           <div className="space-y-4 lg:col-span-2">
             {items.map((item, index) => (
               <div key={index} className="flex gap-4 rounded-lg border bg-card p-4">
@@ -102,16 +153,54 @@ const Cart = () => {
               </div>
             ))}
             <Button variant="ghost" size="sm" className="text-destructive"
-              onClick={() => { emptyCart(); toast.success("Carrito vaciado"); }}>
+              onClick={async () => { await emptyCart(); toast.success("Carrito vaciado"); }}>
               <Trash2 className="mr-2 h-4 w-4" /> Vaciar carrito
             </Button>
+
+            {/* ── Formulario de envío ── */}
+            {showForm && (
+              <div className="rounded-lg border bg-card p-6 space-y-4">
+                <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" /> Datos de envío
+                </h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="name">Nombre completo</Label>
+                    <Input id="name" name="name" value={form.name}
+                      onChange={handleField} placeholder="María García" />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Teléfono</Label>
+                    <Input id="phone" name="phone" value={form.phone}
+                      onChange={handleField} placeholder="3001234567" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="street">Dirección</Label>
+                    <Input id="street" name="street" value={form.street}
+                      onChange={handleField} placeholder="Cra 10 # 20-30" />
+                  </div>
+                  <div>
+                    <Label htmlFor="city">Ciudad</Label>
+                    <Input id="city" name="city" value={form.city}
+                      onChange={handleField} placeholder="Villavicencio" />
+                  </div>
+                  <div>
+                    <Label htmlFor="department">Departamento</Label>
+                    <Input id="department" name="department" value={form.department}
+                      onChange={handleField} placeholder="Meta" />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* ── Resumen ── */}
           <div className="rounded-lg border bg-card p-6">
             <h2 className="font-display text-lg font-semibold text-foreground">Resumen</h2>
             <Separator className="my-4" />
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal ({items.reduce((s,i)=>s+i.quantity,0)} productos)</span>
+                <span className="text-muted-foreground">Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} productos)</span>
                 <span>${totalPrice.toLocaleString("es-CO")}</span>
               </div>
               <div className="flex justify-between">
@@ -127,16 +216,25 @@ const Cart = () => {
               <span>Total</span>
               <span className="text-primary">${total.toLocaleString("es-CO")} COP</span>
             </div>
-            <Button className="mt-6 w-full" size="lg" onClick={handleProceedToPayment} disabled={paying}>
-              {paying
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Iniciando pago...</>
-                : <><CreditCard className="mr-2 h-4 w-4"/>Pagar con Wompi</>
-              }
-            </Button>
+
+            {!showForm ? (
+              <Button className="mt-6 w-full" size="lg" onClick={() => setShowForm(true)}>
+                <MapPin className="mr-2 h-4 w-4" /> Ingresar datos de envío
+              </Button>
+            ) : (
+              <Button className="mt-6 w-full" size="lg"
+                onClick={handleProceedToPayment} disabled={paying}>
+                {paying
+                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Iniciando pago...</>
+                  : <><CreditCard className="mr-2 h-4 w-4" />Pagar con Wompi</>
+                }
+              </Button>
+            )}
+
             <div className="mt-4 text-center">
               <p className="text-xs text-muted-foreground mb-2">Métodos aceptados</p>
               <div className="flex justify-center gap-2 flex-wrap">
-                {['💳 Tarjeta','📱 Nequi','🏦 PSE','🏛️ Bancolombia'].map(m=>(
+                {['💳 Tarjeta', '📱 Nequi', '🏦 PSE', '🏛️ Bancolombia'].map(m => (
                   <span key={m} className="text-xs border rounded px-2 py-1 text-muted-foreground">{m}</span>
                 ))}
               </div>
