@@ -1,18 +1,30 @@
 import axios from 'axios';
 
-// Rutas relativas — el nginx del frontend hace el proxy al API Gateway
+// Products Service — rutas sin cambio
 export const productsApi = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Orders Service — ahora con nombre visible en Network
 export const ordersApi = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/orders-service',
   headers: { 'Content-Type': 'application/json' },
 });
 
-// JWT automático en cada petición del Orders Service
 ordersApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('maleja_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Payments Service — ahora con nombre visible en Network
+export const paymentsApi = axios.create({
+  baseURL: '/api/payments-service',
+  headers: { 'Content-Type': 'application/json' },
+});
+
+paymentsApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('maleja_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
