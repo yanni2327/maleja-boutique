@@ -1,12 +1,18 @@
 import axios from 'axios';
 
-// Products Service — rutas sin cambio
+// Products Service
 export const productsApi = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/products-service',
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Orders Service — ahora con nombre visible en Network
+productsApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('maleja_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Orders Service
 export const ordersApi = axios.create({
   baseURL: '/api/orders-service',
   headers: { 'Content-Type': 'application/json' },
@@ -18,7 +24,7 @@ ordersApi.interceptors.request.use((config) => {
   return config;
 });
 
-// Payments Service — ahora con nombre visible en Network
+// Payments Service
 export const paymentsApi = axios.create({
   baseURL: '/api/payments-service',
   headers: { 'Content-Type': 'application/json' },
